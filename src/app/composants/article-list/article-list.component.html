@@ -1,0 +1,32 @@
+<table class="table table-striped" border="1">
+  <thead>
+      <tr>
+        <th ><button (click)="selectTri('id')" app-tri-visuel="id" [tri-visuel-colonne]='colonneName' [tri-visuel-direction]='direction' > ID </button></th>
+        <th> <button (click)="selectTri('titre')" app-tri-visuel="titre" [tri-visuel-colonne]='colonneName' [tri-visuel-direction]='direction'  > Titre </button></th>
+        <th> <button (click)="selectTri('corps')" app-tri-visuel="corps" [tri-visuel-colonne]='colonneName' [tri-visuel-direction]='direction'  > Corps </button></th>
+        <th> <button (click)="selectTri('categorie')" app-tri-visuel="categorie" [tri-visuel-colonne]='colonneName' [tri-visuel-direction]='direction'  > Catégorie </button></th>
+        <th> <button (click)="selectTri('rating')" app-tri-visuel="rating" [tri-visuel-colonne]='colonneName' [tri-visuel-direction]='direction'  > Note </button></th>
+        <th>Action</th>
+      </tr>
+  </thead>
+  <tbody>
+    <!--tr *ngFor="let a of articles | async | triColonne : 'rating' : true"-->
+    <tr *ngFor="let a of articles.data | triColonne : colonneName : direction">
+      <td>{{a.id}}</td>
+        <td>{{a.titre}}</td>
+        <td>{{a.corps}}</td>
+        <td>{{a.categorie}}</td>
+        <td>{{a.rating}}</td>
+        <td>
+          <a class="btn btn-success" routerLink='/edit/{{a.id}}'>Edit</a> | 
+          <button class="btn btn-danger" (click)="delete(a.id)">X</button>
+        </td>
+    </tr>
+  </tbody>
+</table>
+
+<pagination [boundaryLinks]="true" [totalItems]="articles.total" [(ngModel)]="articles.pageNumber" class="pagination-sm" [itemsPerPage]="articles.pageSize"
+            previousText="&lsaquo;" nextText="&rsaquo;" firstText="&laquo;" lastText="&raquo;"  (pageChanged)="change($event)">
+</pagination>
+
+<a class="btn btn-primary" routerLink="/edit/0">Ajouter</a>

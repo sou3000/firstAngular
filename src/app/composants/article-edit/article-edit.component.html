@@ -1,0 +1,32 @@
+<div class="panel">
+  <form novalidate #monForm='ngForm' (ngSubmit)="save(monForm)">
+      <div class="form-group">
+          <label>Titre :</label>
+          <input class="form-control" [ngClass]="{champ_pristine:monForm.controls.titre?.pristine, champ_error:monForm.controls.titre?.errors && monForm.controls.titre?.dirty}" name="titre" [(ngModel)]="editArticle.titre" required maxlength="10" minlength="3"/> 
+          <ul *ngIf="monForm.controls.titre?.errors && monForm.controls.titre?.dirty">   <!--  ? test sur errors   -->
+              <li *ngIf="monForm.controls.titre.errors?.required" >titre requis</li>
+              <li *ngIf="monForm.controls.titre.errors?.minlength" >titre court</li>
+          </ul>
+      </div>
+       <div class="form-group">
+          <label>Corps :</label>
+          <input class="form-control" name="corps" [(ngModel)]="editArticle.corps" /> 
+      </div>
+       <div class="form-group">
+          <label>Catégorie :</label>
+          <input class="form-control" name="categorie" [(ngModel)]="editArticle.categorie" /> 
+      </div>
+       <div class="form-group">
+          <label>Note :</label>
+          <input class="form-control" name="rating" [(ngModel)]="editArticle.rating"  pattern="[1 - 5]" required
+            [ngClass]="{champ_pristine:monForm.controls.rating?.pristine, champ_error:monForm.controls.rating?.errors && monForm.controls.rating?.dirty}"/> 
+          <ul *ngIf="monForm.controls.rating?.errors && monForm.controls.rating?.dirty">   <!--  ? test sur errors   -->
+              <li *ngIf="monForm.controls.rating.errors?.required" >titre requis</li>
+              <li *ngIf="monForm.controls.rating.errors?.pattern" >entre 1 et 5</li>
+          </ul>
+      </div>
+        <input type="hidden" name="id" [ngModel]="editArticle.id" /> 
+      <button class="btn btn-primary" type="submit" [disabled]="monForm.invalid" >Save</button> 
+      
+  </form>
+</div>
