@@ -37,3 +37,20 @@ export class AppComponent{
     console.log('The user pressed enter in the text field.');
   }
 }
+
+MIGRATION V14 TO V15:
+Update to the new version
+Review these changes and perform the actions to update your application.
+
+1. Make sure that you are using a supported version of node.js before you upgrade your application. Angular v15 supports node.js versions: 14.20.x, 16.13.x and 18.10.x. Read further
+
+2. Make sure that you are using a supported version of TypeScript before you upgrade your application. Angular v15 supports TypeScript version 4.8 or later. Read further
+
+3. In the application's project directory, run NG UPDATE @ANGULAR/CORE@15 @ANGULAR/CLI@15 to update your application to Angular v15.
+
+4. Update other dependencies to compatible versions
+
+You can use the NG UPDATE command with the --ALL flag to update all the dependencies in your PACKAGE.JSON file to their latest compatible versions. However, this command might not always update the dependencies to the latest compatible versions, so you may need to manually update some packages.
+
+To update dependencies one at a time, such as Angular Material, you can use the command ng update @angular/material@15.
+
