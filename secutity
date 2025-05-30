@@ -1,0 +1,32 @@
+formation sécu:
+- sql injection ( ' or 1=1)
+- xxe xml entity
+- command injection (unix)
+- use random identifiers
+xss Cross Site Scripting
+-xss attack (javascript dans input): escape & sanitarize user input
+Furthermore, we’ve learned that using additional security controls like HTTPOnly cookie flag, Content Security Policy HTTP Header, and X-XSS-Protection HTTP Header can also help to protect from XSS attacks
+- DOM xss:
+document.write("Hello " + name + "! Please login or signup to access news stories");
+- Path traversal attack:
+url?file=4322   (file=../etc/password)
+data = "tmp/" + file;
+=> cononicalize path
+- leftover debug code: supprimer code spécifique à env de test/recette  en prod (désactivation auth...)
+- pas d'auth en GET => en POST et https
+-  session exposure attrack: The secure way to send a session ID is a cookie with HttpOnly and Secure flags.
+-User Enumeration attack: dans page login ou pass oublié ne pas dire mail bon ou pas => afficher un message generique
+- horizontal privilège escalade attack: 
+url?profile=332 => check authorisation
+- vertical privolege escalade attack: access to admin page... => @PreAuthorize("hasRole('ROLE_USER')")
+- Clickjacking attacks: charger une page ds iframe avec opacity 0 et clic sur bouton caché => use X-Frame-Options headers
+- URL Redirect attack => valid the url before redirect
+
+
+
+
+
+contre attaque force brute:
+- pass à 12+ car
+- captcha
+- limitation à N essais...
