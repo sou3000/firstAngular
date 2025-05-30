@@ -1,0 +1,40 @@
+package bpce.rns.ms.notation.store.configuration.interceptor;
+
+import bpce.rns.ms.notation.store.utils.SpringContextUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.servlet.HandlerInterceptor;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@Slf4j
+public class UserInformationInterceptor implements HandlerInterceptor {
+
+
+    /**
+     * permet d'intercepter toute requete et de récupérer les infos du user connecté à partir du header
+     * et d'alimenter le bean userInformation pour etre utilisé dans la couche Service
+     * @param request
+     * @param response
+     * @param handler
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        log.info("Request intercepted: " + request.getHeader("PROFILE"));
+        // TODO remplacer SpringContextUtil par la classe de spring
+        UserInformation userInformation = SpringContextUtil.getBean(UserInformation.class);
+        userInformation.setProfile(request.getHeader("PROFILE"));
+        userInformation.setLocalOrCentral(request.getHeader("LOCAL_OR_CENTRAL"));
+        userInformation.setCodeBanque(request.getHeader("CODE_BANQUE"));
+        userInformation.setUsername(request.getHeader("USERNAME"));
+        userInformation.setEmail(null); // TODO : userInformation.setEmail(StringUtils.isEmpty(request.getHeader("EMAIL")) ? null : request.getHeader("EMAIL")); on a mit null le temps q implemente --> userInformation.getEmail() ou userInformation.getAgentId() selon la banque
+        userInformation.setAgentId(StringUtils.isEmpty(request.getHeader("AGENT_ID")) ? null : request.getHeader("AGENT_ID"));
+        // TODO que fait-on si le profile n'est pas renseigné ? 401 ou 403 ...
+        return true;
+    }
+
+
+}
