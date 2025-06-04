@@ -1,0 +1,148 @@
+package bpce.rns.ms.notation.store.configuration;
+
+import bpce.rns.ms.notation.store.service.externe.ReferentielStatiqueService;
+import io.netty.channel.ChannelOption;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+import reactor.netty.Connection;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.tcp.TcpClient;
+
+import javax.net.ssl.SSLException;
+import java.util.function.Consumer;
+
+@Configuration
+@EnableScheduling
+@Order(2)
+@Slf4j
+public class WebClientConfig {
+
+    /**
+     * Logger.
+     */
+    private static final Logger LOG = LoggerFactory.getLogger(WebClientConfig.class);
+
+    @Value(value = "${app.api.passwordAdmin}")
+    private String passwordAdmin;
+
+    /**
+     * semarchy api key
+     */
+    @Value(value = "${app.apirft.key}")
+    private String key;
+
+    /**
+     * Write Timeout Handler
+     */
+    private static final int WRITE_TIMEOUT_HANDLER = 300;
+
+    /**
+     * Read Timeout Handler
+     */
+    private static final int READ_TIMEOUT_HANDLER = 300;
+
+    /**
+     * Connect Timeout
+     */
+    private static final int CONNECT_TIMEOUT = 2000;
+
+    @Autowired
+    private ReferentielStatiqueService referentielStatiqueService;
+
+
+    /**
+     * @return connection
+     */
+    public Consumer<? super Connection> channelInit() {
+
+        return connection -> connection.addHandlerLast(new ReadTimeoutHandler(READ_TIMEOUT_HANDLER))
+                .addHandlerLast(new WriteTimeoutHandler(WRITE_TIMEOUT_HANDLER));
+
+    }
+
+    private WebClient commonWebCLient() throws SSLException {
+
+        TcpClient tcpClient = TcpClient.create().option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT)
+                .doOnConnected(channelInit());
+        SslContext sslContext = SslContextBuilder
+                .forClient()
+                .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                .build();
+
+        return WebClient.builder().clientConnector(new ReactorClientHttpConnector(HttpClient.from(tcpClient)
+                .secure(t -> t.sslContext(sslContext))))
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
+                .codecs(codecs -> codecs.defaultCodecs().maxInMemorySize(2* 1024 * 1024)) //2Mb
+                .filter(ExchangeFilterFunctions.basicAuthentication("admin1", passwordAdmin))
+                .filter(logRequest())
+                .filter(logResponse())
+                .build();
+    }
+
+
+    @Bean
+    public WebClient rftWebClient(@Value(value = "${app.apirft.url}") String reftstatUrl) throws SSLException {
+        return commonWebCLient().mutate().defaultHeaders(head -> head.add("API-Key", key)).baseUrl(reftstatUrl).build();
+    }
+
+    @Bean
+    public WebClient refstatWebClient(@Value(value = "${app.apirefstat.url}") String reftstatUrl) throws SSLException {
+        return commonWebCLient().mutate().baseUrl(reftstatUrl).build();
+    }
+
+    @Bean
+    public WebClient encoursWebClient(@Value(value = "${app.encours.url}") String encoursUrl) throws SSLException {
+        return commonWebCLient().mutate().baseUrl(encoursUrl).build();
+    }
+
+    @Bean
+    public WebClient aiguillageWebClient(@Value(value = "${app.aiguillage.url}") String aiguillageUrl) throws SSLException {
+        return commonWebCLient().mutate().baseUrl(aiguillageUrl).build();
+    }
+
+    //@Scheduled(cron = "${app.job.refstat}")
+    @Profile("!unit_test & !ssl & !testDB")
+    @Scheduled(fixedDelay = 7200000) //ttes les 2 heures
+    public void scheduleTaskRefstat() {
+        referentielStatiqueService.updateRefereltielStatiqueApi("All");
+    }
+
+    private ExchangeFilterFunction logRequest() {
+        return ExchangeFilterFunction.ofRequestProcessor(clientRequest -> {
+            log.info("Request: {} {}", clientRequest.method(), clientRequest.url());
+            //clientRequest.headers().forEach((name, values) -> values.forEach(value -> log.info("{}={}", name, value)));
+            return Mono.just(clientRequest);
+        });
+    }
+
+    private ExchangeFilterFunction logResponse() {
+        return ExchangeFilterFunction.ofResponseProcessor(clientResponse -> {
+            log.info("Response status: {}", clientResponse.statusCode());
+            //clientResponse.headers().asHttpHeaders().forEach((name, values) -> values.forEach(value -> log.info("{}={}", name, value)));
+            return Mono.just(clientResponse);
+        });
+    }
+}
+
