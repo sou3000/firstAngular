@@ -35,6 +35,12 @@ public class UserInformationInterceptor implements HandlerInterceptor {
         // TODO que fait-on si le profile n'est pas renseigné ? 401 ou 403 ...
         return true;
     }
-
-
 }
+
+
+déclaration du bean:
+    @Bean
+    @RequestScope
+    public UserInformation userInformation() {
+        return UserInformation.builder().build();
+    }
