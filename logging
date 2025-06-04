@@ -1,0 +1,97 @@
+package fr.bpce.yzr.commun.librairie.logs;
+
+import fr.bpce.yzr.commun.librairie.utils.AspectLogUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.time.DurationFormatUtils;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.MDC;
+import org.springframework.stereotype.Component;
+
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static fr.bpce.yzr.commun.librairie.utils.AspectLogUtils.getArgsAsMap;
+
+@Aspect
+@Component
+@Slf4j
+public class LoggingAspectConfig {
+
+    @Around("@within(org.springframework.web.bind.annotation.RestController) || @annotation(org.springframework.web.bind.annotation.RestController) || " +
+            "@within(org.springframework.kafka.annotation.KafkaListener) || @annotation(org.springframework.kafka.annotation.KafkaListener)")
+    public Object logExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
+        MethodSignature method = (MethodSignature) joinPoint.getSignature();
+
+        Map<String, Object> args = getArgsAsMap(method.getParameterNames(), joinPoint.getArgs());
+        String methodArgs = args.entrySet().stream().map(k -> k.getKey() + ": " + k.getValue()).collect(Collectors.joining(", "));
+
+        if (methodArgs.length() > 1000){
+            methodArgs = methodArgs.substring(0,1000).concat(" ... args");
+        }
+
+        try {
+            Map<String, Object> interestedFields = AspectLogUtils.getInterestedValuesIn(args);
+            interestedFields.forEach((key, value) -> MDC.put(key, value != null ? value.toString() : ""));
+        } catch (Throwable e) {
+            log.debug("Error trying to read the interested fields. Ignoring.");
+        }
+
+        log.info("Start method: {}.{}() with arguments = {}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName(), methodArgs);
+
+        long start = System.currentTimeMillis();
+        Object result = joinPoint.proceed();
+        long executionTime = System.currentTimeMillis() - start;
+        MDC.put("duration_ms", String.valueOf(executionTime));
+
+        log.info("End method: {}.{}() with arguments = {} executed in {} with result: {}", joinPoint.getSignature().getDeclaringTypeName(),
+                joinPoint.getSignature().getName(), methodArgs, formatExecutionTime(executionTime), result);
+
+        MDC.clear();
+        return result;
+    }
+
+    private String formatExecutionTime(long duree) {
+        if (duree >= 60000) {
+            return DurationFormatUtils.formatDuration(duree, "m' minutes, 's' seconds and 'S' ms'");
+        } else if (duree > 1000) {
+            return DurationFormatUtils.formatDuration(duree, "s' seconds and 'S' ms'");
+        } else {
+            return DurationFormatUtils.formatDuration(duree, "S' ms'");
+        }
+    }
+}
+
+
+
+package bpce.rns.ms.notation.store.configuration;
+
+import bpce.rns.ms.notation.store.configuration.interceptor.UserInformation;
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+@Aspect
+@Component
+@Slf4j
+public class RnsLoggingAspectControllerConfig {
+
+    private UserInformation userInformation;
+
+    @Autowired
+    public RnsLoggingAspectControllerConfig(UserInformation userInformation) {
+        this.userInformation = userInformation;
+    }
+
+    @Before("@within(org.springframework.web.bind.annotation.RestController) || @annotation(org.springframework.web.bind.annotation.RestController)")
+    public void addUserInfoBefore(JoinPoint joinPoint) throws Throwable {
+        MDC.put("user", userInformation.getUsername());
+        MDC.put("codeBanque", userInformation.getCodeBanque());
+    }
+}
