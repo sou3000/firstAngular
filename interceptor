@@ -37,6 +37,32 @@ public class UserInformationInterceptor implements HandlerInterceptor {
     }
 }
 
+package bpce.rns.ms.notation.store.configuration;
+
+import bpce.rns.ms.notation.store.configuration.interceptor.UserInformationInterceptor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.view.InternalResourceViewResolver;
+
+@Configuration
+@EnableWebMvc
+public class WebMvcConfig implements WebMvcConfigurer {
+
+    /**
+     * permet d'intercepter les requetes pour faire un traitement spécifique
+     * @param registry
+     */
+    @Override
+    public void addInterceptors(final InterceptorRegistry registry) {
+        registry.addInterceptor(new UserInformationInterceptor());
+    }
+}
+
+
 
 déclaration du bean:
     @Bean
