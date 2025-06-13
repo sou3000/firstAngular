@@ -1,0 +1,3 @@
+FROM docker-proxy-redhat.artifactory.xxxxx.fr/ubi8/openjdk-8:1.21-1
+COPY ./myProject/target/myProject-##APPLICATION_VERSION##.jar /appli/lib/myProject-##APPLICATION_VERSION##.jar
+ENTRYPOINT ["java", "-XX:+UseStringDeduplication", "-Duser.timezone=Europe/Paris", "-Djava.security.egd=file:/dev/./urandom","-Dlogging.config=/appli/config/logback.xml", "-Dspring.config.location=/appli/config/application-xld.yml ", "-jar", "/appli/lib/myProject-##APPLICATION_VERSION##.jar" ]
