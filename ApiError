@@ -1,0 +1,74 @@
+package bpce.rns.ms.notation.store.exception.handler;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Data;
+import org.springframework.http.HttpStatus;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+/**
+ * Api erreur générique du service
+ *
+ * @author tgi
+ */
+@Data
+public class RestApiError {
+    /**
+     * HTTP Status.
+     */
+    private HttpStatus status;
+
+    /**
+     * Timestamp de l'erreur
+     */
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy hh:mm:ss")
+    private LocalDateTime timestamp;
+
+    /**
+     * Message erreur.
+     */
+    private String message;
+
+    /**
+     * Debug message erreur.
+     */
+    private String debugMessage;
+
+    private List<String> erreurs;
+
+    /**
+     * Default constructeur
+     */
+    private RestApiError() {
+        timestamp = LocalDateTime.now();
+    }
+
+    /**
+     * HTTP Status constructeur
+     */
+    public RestApiError(HttpStatus status) {
+        this();
+        this.status = status;
+    }
+
+    /**
+     * HTTP status and erreur constructeur
+     */
+    public RestApiError(HttpStatus status, Throwable ex) {
+        this();
+        this.status = status;
+        this.message = "Unexpected error";
+        this.debugMessage = ex.getLocalizedMessage();
+    }
+
+    /**
+     * HTTP status, erreur et message d'erreur constructeur
+     */
+    public RestApiError(HttpStatus status, String message, Throwable ex) {
+        this();
+        this.status = status;
+        this.message = message;
+        this.debugMessage = ex.getLocalizedMessage();
+    }
+}
