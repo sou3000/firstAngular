@@ -1,0 +1,69 @@
+package bpce.rns.ms.notation.store;
+
+import fr.bpce.yzr.commun.librairie.CommunLibrairie;
+import lombok.extern.slf4j.Slf4j;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
+
+/**
+ * Main class pour lancer l'application Spring Boot
+ */
+@Slf4j
+@SpringBootApplication
+@Import(CommunLibrairie.class)
+@EnableCaching
+public class NotationStoreApplication {
+
+    /**
+     * Méthode principale, utilisé pour lancer l'application.
+     *
+     * @param args Les arguments de la ligne de commande
+     */
+    public static void main(String[] args) {
+        // Spring Application
+        SpringApplication app = new SpringApplication(NotationStoreApplication.class);
+        // Environnement
+        Environment env = app.run(args).getEnvironment();
+        log.info("Début du micro service - MsNotationStore");
+        // protocol http
+        String protocol = "http";
+        // verification  du ssl
+        if (env.getProperty("server.ssl.key-store") != null) {
+            // passage en https
+            protocol = "https";
+        }
+
+        InetAddress ia = null;
+        String hostAddress = null;
+
+		try {
+			ia = InetAddress.getLocalHost();
+			hostAddress = ia.getHostName();
+		} catch (UnknownHostException e) {
+			log.info(e.getMessage());
+		}
+
+		// host external or local
+		hostAddress = ia != null ? hostAddress : "localhost";
+
+        log.info("\n----------------------------------------------------------\n\t" +
+                "Application '{}' is running! Access URLs:\n\t" +
+                "Local: \t\t{}://localhost:{}\n\t" +
+                "External: \t{}://{}:{}\n\t" +
+                "Profile(s): \t{}\n----------------------------------------------------------",
+            env.getProperty("spring.application.name"),
+            protocol,
+            env.getProperty("server.port"),
+            protocol,
+            hostAddress,
+            env.getProperty("server.port"),
+            env.getActiveProfiles());
+    }
+}
