@@ -1,0 +1,89 @@
+package bpce.rns.ms.notation.store.exception.handler;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.context.request.WebRequest;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * Controlleur pour traduire les exceptions côté service en format convivial de
+ * type JSON.
+ */
+@ControllerAdvice
+public class RestExceptionHandler {
+
+    /**
+     * Logger.
+     */
+    private static final Logger LOG = LoggerFactory.getLogger(RestExceptionHandler.class);
+
+    /**
+     * gère les exceptions de type d'erreur de validation
+     * @param ex
+     * @param request
+     * @return
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<RestApiError> handleValidationErrors(MethodArgumentNotValidException ex, WebRequest request) {
+        LOG.debug("Problème lors de l'appel api {} pour le type d'exception MethodArgumentNotValidException {}", request, ex);
+        List<String> errors = ex.getBindingResult().getFieldErrors()
+                .stream().map(FieldError::getDefaultMessage).collect(Collectors.toList());
+        RestApiError apiError = new RestApiError(HttpStatus.BAD_REQUEST);
+        apiError.setMessage("Erreurs de validation");
+        apiError.setErreurs(errors);
+        ResponseEntity<RestApiError> resp = buildResponseEntity(apiError);
+        LOG.error("Problème lors de l'appel api {} MethodArgumentNotValidException avec le retour erreur {}", request, resp);
+        return resp;
+    }
+
+    /**
+     * gère les exceptions de type accès non authorisé
+     * @param ex
+     * @param request
+     * @return
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<RestApiError> handleAccessDeniedException(AccessDeniedException ex, WebRequest request) {
+        LOG.debug("Problème lors de l'appel api {} pour le type d'exception AccessDeniedException {}", request, ex);
+        RestApiError apiError = new RestApiError(HttpStatus.FORBIDDEN);
+        apiError.setMessage("Not autorized to call this api");
+        ResponseEntity<RestApiError> resp = buildResponseEntity(apiError);
+        LOG.error("Problème lors de l'appel api {} AccessDeniedException avec le retour erreur {}", request, resp);
+        return resp;
+    }
+
+
+    /**
+     * Intercepte tous les types d'exception et throw dans la méthode du controller mvc.
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<RestApiError> handleDefaultException(Exception ex, WebRequest request) {
+        LOG.error("Problème lors de l'appel api {} pour le type d'exception par défaut {}", request, ex);
+        RestApiError apiError = new RestApiError(HttpStatus.INTERNAL_SERVER_ERROR);
+        apiError.setMessage(ex.getMessage());
+        ResponseEntity<RestApiError> resp = buildResponseEntity(apiError);
+        LOG.error("Problème lors de l'appel api {} par défaut avec le retour erreur {}", request, resp);
+        return resp;
+    }
+
+    /**
+     * Construire la réponse générique pour l'api erreur.
+     */
+    public ResponseEntity<RestApiError> buildResponseEntity(RestApiError restApiError) {
+        if (restApiError != null) {
+            return ResponseEntity.status(restApiError.getStatus()).contentType(MediaType.APPLICATION_JSON).body(restApiError);
+        } else {
+            return null;
+        }
+    }
+}
