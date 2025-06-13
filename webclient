@@ -126,7 +126,7 @@ public class WebClientConfig {
     @Profile("!unit_test & !ssl & !testDB")
     @Scheduled(fixedDelay = 7200000) //ttes les 2 heures
     public void scheduleTaskRefstat() {
-        referentielStatiqueService.updateRefereltielStatiqueApi("All");
+        referentielStatiqueService.updateRefereltielStatiqueApi("All"); //insert les données dans KeyValueRepository
     }
 
     private ExchangeFilterFunction logRequest() {
