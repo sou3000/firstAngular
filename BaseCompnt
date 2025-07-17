@@ -1,0 +1,55 @@
+import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Subscription} from "rxjs";
+
+@Component({
+  template: '',
+})
+export abstract class BaseRmnComponent implements OnDestroy {
+  protected subscriptions: Array<Subscription> = [];
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach((e) => e.unsubscribe());
+    this.subscriptions = [];
+  }
+}
+
+
+import {Component, OnInit} from "@angular/core";
+import {DynamicDialogConfig} from "primeng/dynamicdialog";
+
+@Component({
+    template: ''
+})
+export abstract class BaseDialogComponent<Entity> implements OnInit {
+
+    entityList: Entity[];
+
+    constructor(protected config: DynamicDialogConfig) {}
+
+    public ngOnInit() {
+        this.entityList = this.config.data.liste;
+    }
+}
+
+
+@Component({
+    selector: 'rmn-liste-revues-client',
+    templateUrl: './liste-revues.component.html',
+    styleUrls: ['./liste-revues.component.scss']
+})
+export class ListeRevuesComponent extends BaseDialogComponent<TiersRevues>{
+}
+
+ailleurs...
+
+showListeRevues(notation: EtapeNotation) {
+    this.ref = this.dialogService.open(ListeRevuesComponent, {
+        header: this.translateService.instant('list.table.tooltip.reviewFor'),
+        width: '50%',
+        data: {
+            liste: notation?.listeRevues
+        },
+        contentStyle: {'max-height': '500px', overflow: 'auto'},
+        baseZIndex: 10000
+    });
+}
