@@ -1,0 +1,74 @@
+html:
+<div class="loading-screen" *ngIf="loadingScreenService.loading$| async">
+    <p-progressSpinner [style]="{width: '100px', height: '100px'}" strokeWidth="2" ></p-progressSpinner>
+</div>
+
+<div class="loading-screen" *ngIf="loadingScreenService.loadingWithMessage$| async">
+    <div class="flex flex-column align-items-center bg-white p-5 border-round">
+        <img src="/assets/layout/images/small.png" height="50" class="loading-img" alt="logo">
+        <p-progressSpinner [style]="{width: '100px', height: '100px'}" strokeWidth="2" ></p-progressSpinner>
+        <div>{{loadingScreenService.message}}</div>
+    </div>
+</div>
+
+css:
+.loading-screen {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.32);
+    z-index: 20000;
+}
+
+.loading-img {
+    margin-top: 25px;
+    position: absolute
+}
+cmpt:
+export class LoadingScreenComponent implements OnInit {
+
+
+  constructor(public loadingScreenService: LoadingScreenService) { }
+
+  ngOnInit(): void {
+  }
+
+}
+service:
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, Observable } from 'rxjs';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class LoadingScreenService {
+
+  private loadingSubject = new BehaviorSubject<boolean>(false);
+  loading$: Observable<boolean> = this.loadingSubject.asObservable();
+
+  private loadingWithMessageSubject = new BehaviorSubject<boolean>(false);
+  loadingWithMessage$: Observable<boolean> = this.loadingWithMessageSubject.asObservable();
+  message: string;
+
+  constructor() { }
+
+  display() {
+    this.loadingSubject.next(true);
+  }
+
+  displayWithMessage(message: string) {
+    this.message = message + '...';
+    this.loadingWithMessageSubject.next(true);
+  }
+
+  hide() {
+    this.loadingSubject.next(false);
+    this.loadingWithMessageSubject.next(false);
+  }
+
+}
