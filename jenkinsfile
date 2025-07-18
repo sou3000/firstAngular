@@ -1,0 +1,9 @@
+stagesByBranches = [
+                    //'.*master' : ['cleanws', 'checkout', 'variabilisation', 'build','qualityanalysis', 'deploytorepository', 'prepareBuildImage', 'buildImage','createPackage', 'publish'],
+                    '.*master' : ['cleanws', 'checkout', 'variabilisation', 'build','deploytorepository', 'prepareBuildImage', 'buildImage','createPackage', 'publish'],
+                    '.*develop' : ['cleanws', 'checkout', 'variabilisation', 'build', 'qualityanalysis', 'deploytorepository', 'prepareBuildImage', 'buildImage','createPackage', 'publish'],
+                    '.*feature/.*' : ['cleanws', 'checkout', 'variabilisation', 'build', 'qualityanalysis', 'deploytorepository', 'prepareBuildImage', 'buildImage','createPackage', 'publish'],
+                    '.*bugfix/.*' : ['cleanws', 'checkout', 'variabilisation', 'build', 'qualityanalysis', 'deploytorepository', 'prepareBuildImage', 'buildImage','createPackage', 'publish'],
+                    '.*release/.*' : ['cleanws', 'checkout', 'variabilisation', 'build', 'qualityanalysis', 'deploytorepository', 'prepareBuildImage', 'buildImage','createPackage', 'publish'],
+                    '.*hotfix/.*' : ['cleanws', 'checkout', 'variabilisation', 'build', 'qualityanalysis', 'deploytorepository', 'prepareBuildImage', 'buildImage','createPackage', 'publish'],
+              ]
