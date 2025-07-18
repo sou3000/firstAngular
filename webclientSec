@@ -1,0 +1,65 @@
+@Configuration
+@EnableWebSecurity
+@NoArgsConstructor
+@Order(1)
+@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true, jsr250Enabled = true)
+public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+
+    /**
+     * Salt string à utiliser.
+     */
+    private static final String SALT = "toto";
+    /**
+     * Strength PasswordEncoder
+     */
+    private static final int STRENGHT_PASS = 9;
+    /**
+     * Nombre de listener par instance du microsercice et par topic.
+     */
+    @Value(value = "${app.api.passwordAdmin}")
+    private String passwordAdmin;
+    /**
+     * Nombre de listener par instance du microsercice et par topic.
+     */
+    @Value(value = "${app.api.passwordUser}")
+    private String passwordUser;
+
+    /**
+     * Customisation du default passwordEncoder de Spring Sécurity.
+     *
+     * @return PasswordEncoder
+     */
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(STRENGHT_PASS, new SecureRandom(SALT.getBytes()));
+    }
+
+    /**
+     * Configuration authentification
+     */
+    @Override
+    protected void configure(final AuthenticationManagerBuilder auth) throws Exception {
+        auth.inMemoryAuthentication().withUser("user").password(passwordEncoder().encode(passwordUser)).roles("USER").and().
+                withUser("admin").password(passwordEncoder().encode(passwordAdmin)).roles("ADMIN");
+    }
+
+    /**
+     * Authentifiaction manager
+     */
+    @Bean
+    @Override
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
+    }
+
+    /**
+     * Configuration https
+     */
+    @Override
+    protected void configure(HttpSecurity httpSecurity) throws Exception {
+        httpSecurity.csrf().disable().authorizeRequests()
+                .antMatchers("/actuator/**", "/v2/api-docs", "/configuration/ui", "/swagger-resources/**", "/configuration/security",
+                        "/swagger-ui.html", "/webjars/**", "/")
+                .permitAll().anyRequest().authenticated().and().httpBasic();
+    }
+}
